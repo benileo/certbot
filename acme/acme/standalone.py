@@ -79,6 +79,15 @@ class HTTP01Server(BaseHTTPServer.HTTPServer, ACMEServerMixin):
                 simple_http_resources=resources))
 
 
+class HTTP01TLSServer(TLSServer, ACMEServerMixin):
+    """HTTP01 TLS challenge handler."""
+
+    def __init__(self, server_address, certs, resources):
+        TLSServer.__init__(self, server_address,
+            HTTP01TLSRequestHandler.partial_init(
+                simple_http_resources=resources), certs=certs)
+
+
 class HTTP01RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     """HTTP01 challenge handler.
 
@@ -152,6 +161,15 @@ class HTTP01RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         return functools.partial(
             cls, simple_http_resources=simple_http_resources)
+
+
+class HTTP01TLSRequestHandler(HTTP01RequestHandler):
+    """HTTP01 TLS challenge handler"""
+
+    def handle(self):
+        """Handle request."""
+        self.log_message("Incoming request")
+        socketserver.BaseRequestHandler.handle(self)
 
 
 def simple_tls_sni_01_server(cli_args, forever=True):
